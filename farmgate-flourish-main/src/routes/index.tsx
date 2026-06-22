@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type Dispatch, type FormEvent, type SetStateAction } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -34,8 +34,96 @@ type Product = {
   emoji: string;
 };
 type CartItem = { productId: string; qty: number };
+type CartEntry = CartItem & { product: Product };
 type Toast = { id: number; msg: string; kind?: "success" | "info" | "error" };
 type AdminAccount = { username: string; password: string; securityQ: string; securityA: string };
+
+type NavProps = {
+  scrolled: boolean;
+  cartCount: number;
+  onCart: () => void;
+  onAdmin: () => void;
+  loggedIn: boolean;
+  onLogout: () => void;
+  onSearch: (value: string) => void;
+  search: string;
+};
+type HeroProps = {
+  search: string;
+  setSearch: (value: string) => void;
+  category: (typeof CATEGORIES)[number];
+  setCategory: (value: (typeof CATEGORIES)[number]) => void;
+  freshness: number;
+};
+type FarmersStripProps = {
+  farmers: Farmer[];
+  active: string;
+  setActive: (id: string) => void;
+  notifs: Record<string, number>;
+};
+type MarketplaceProps = {
+  products: Product[];
+  farmers: Farmer[];
+  onAdd: (product: Product) => void;
+};
+type CartSidebarProps = {
+  open: boolean;
+  onClose: () => void;
+  items: CartEntry[];
+  inc: (id: string) => void;
+  dec: (id: string) => void;
+  remove: (id: string) => void;
+  subtotal: number;
+  totalItems: number;
+  onOrder: () => void;
+};
+type AdminModalProps = {
+  onClose: () => void;
+  account: AdminAccount | null;
+  setAccount: Dispatch<SetStateAction<AdminAccount | null>>;
+  loggedIn: boolean;
+  setLoggedIn: Dispatch<SetStateAction<boolean>>;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+  farmers: Farmer[];
+  setFarmers: Dispatch<SetStateAction<Farmer[]>>;
+  products: Product[];
+  setProducts: Dispatch<SetStateAction<Product[]>>;
+  notifs: Record<string, number>;
+};
+type LoginFormProps = {
+  account: AdminAccount;
+  onLogin: () => void;
+  onForgot: () => void;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+};
+type ForgotFormProps = {
+  account: AdminAccount;
+  onReset: (newPassword: string) => void;
+  onBack: () => void;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+};
+type DashboardProps = {
+  farmers: Farmer[];
+  setFarmers: Dispatch<SetStateAction<Farmer[]>>;
+  products: Product[];
+  setProducts: Dispatch<SetStateAction<Product[]>>;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+  notifs: Record<string, number>;
+};
+type FarmerCRUDProps = {
+  farmers: Farmer[];
+  setFarmers: Dispatch<SetStateAction<Farmer[]>>;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+  notifs: Record<string, number>;
+  products: Product[];
+  setProducts: Dispatch<SetStateAction<Product[]>>;
+};
+type ProductCRUDProps = {
+  farmers: Farmer[];
+  products: Product[];
+  setProducts: Dispatch<SetStateAction<Product[]>>;
+  toast: (msg: string, kind?: Toast["kind"]) => void;
+};
 
 /* ---------- Defaults ---------- */
 const DEFAULT_FARMERS: Farmer[] = [
@@ -273,7 +361,7 @@ function Ticker() {
 }
 
 /* ---------- Nav ---------- */
-function Nav({ scrolled, cartCount, onCart, onAdmin, loggedIn, onLogout, onSearch, search }: any) {
+function Nav({ scrolled, cartCount, onCart, onAdmin, loggedIn, onLogout, onSearch, search }: NavProps) {
   const [open, setOpen] = useState(false);
   return (
     <nav className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
@@ -286,7 +374,7 @@ function Nav({ scrolled, cartCount, onCart, onAdmin, loggedIn, onLogout, onSearc
           <input
             placeholder="Search produce or farmer…"
             value={search}
-            onChange={(e) => onSearch(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => onSearch(e.target.value)}
           />
         </div>
         <div className="nav-actions">
@@ -308,7 +396,7 @@ function Nav({ scrolled, cartCount, onCart, onAdmin, loggedIn, onLogout, onSearc
 }
 
 /* ---------- Hero ---------- */
-function Hero({ search, setSearch, category, setCategory, freshness }: any) {
+function Hero({ search, setSearch, category, setCategory, freshness }: HeroProps) {
   return (
     <header className="hero">
       <div className="hero-grain" />
@@ -324,7 +412,7 @@ function Hero({ search, setSearch, category, setCategory, freshness }: any) {
           <input
             placeholder="Search tomatoes, basil, Emma Fields…"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
           />
         </div>
 
@@ -354,7 +442,7 @@ function Hero({ search, setSearch, category, setCategory, freshness }: any) {
 }
 
 /* ---------- Farmers Strip ---------- */
-function FarmersStrip({ farmers, active, setActive, notifs }: any) {
+function FarmersStrip({ farmers, active, setActive, notifs }: FarmersStripProps) {
   return (
     <section className="section">
       <div className="section-head">
@@ -390,7 +478,7 @@ function FarmersStrip({ farmers, active, setActive, notifs }: any) {
 }
 
 /* ---------- Marketplace ---------- */
-function Marketplace({ products, farmers, onAdd }: any) {
+function Marketplace({ products, farmers, onAdd }: MarketplaceProps) {
   return (
     <section className="section">
       <div className="section-head">
@@ -438,7 +526,7 @@ function ProductCard({ p, farmer, onAdd }: { p: Product; farmer?: Farmer; onAdd:
 }
 
 /* ---------- Cart Sidebar ---------- */
-function CartSidebar({ open, onClose, items, inc, dec, remove, subtotal, totalItems, onOrder }: any) {
+function CartSidebar({ open, onClose, items, inc, dec, remove, subtotal, totalItems, onOrder }: CartSidebarProps) {
   return (
     <>
       <div className={`cart-overlay ${open ? "show" : ""}`} onClick={onClose} />
@@ -449,7 +537,7 @@ function CartSidebar({ open, onClose, items, inc, dec, remove, subtotal, totalIt
         </div>
         <div className="cart-body">
           {items.length === 0 && <div className="empty">Your basket is empty. Go find something fresh!</div>}
-          {items.map((ci: any) => (
+          {items.map((ci) => (
             <div key={ci.productId} className="cart-item">
               <div className="cart-emoji">{ci.product.emoji}</div>
               <div className="cart-info">
@@ -478,7 +566,7 @@ function CartSidebar({ open, onClose, items, inc, dec, remove, subtotal, totalIt
 }
 
 /* ---------- Admin Modal ---------- */
-function AdminModal({ onClose, account, setAccount, loggedIn, setLoggedIn, toast, farmers, setFarmers, products, setProducts, notifs }: any) {
+function AdminModal({ onClose, account, setAccount, loggedIn, setLoggedIn, toast, farmers, setFarmers, products, setProducts, notifs }: AdminModalProps) {
   const [mode, setMode] = useState<"setup" | "login" | "forgot" | "dash">(
     loggedIn ? "dash" : account ? "login" : "setup"
   );
@@ -500,7 +588,7 @@ function AdminModal({ onClose, account, setAccount, loggedIn, setLoggedIn, toast
         </div>
 
         {mode === "setup" && <SetupForm onCreate={(a) => { setAccount(a); setLoggedIn(true); toast("Admin account created"); }} />}
-        {mode === "login" && (
+        {mode === "login" && account && (
           <LoginForm
             account={account}
             onLogin={() => { setLoggedIn(true); toast("Welcome back, admin"); }}
@@ -508,7 +596,7 @@ function AdminModal({ onClose, account, setAccount, loggedIn, setLoggedIn, toast
             toast={toast}
           />
         )}
-        {mode === "forgot" && (
+        {mode === "forgot" && account && (
           <ForgotForm
             account={account}
             onReset={(newPw: string) => {
@@ -563,11 +651,11 @@ function SetupForm({ onCreate }: { onCreate: (a: AdminAccount) => void }) {
   );
 }
 
-function LoginForm({ account, onLogin, onForgot, toast }: any) {
+function LoginForm({ account, onLogin, onForgot, toast }: LoginFormProps) {
   const [u, setU] = useState(""); const [p, setP] = useState("");
   const [tries, setTries] = useState(0);
   return (
-    <form className="form" onSubmit={(e) => {
+    <form className="form" onSubmit={(e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (u.trim() === account.username && p === account.password) onLogin();
       else {
@@ -576,18 +664,18 @@ function LoginForm({ account, onLogin, onForgot, toast }: any) {
         if (n >= 2) toast("Forgot password? Use the reset link below.", "info");
       }
     }}>
-      <label>Username<input value={u} onChange={(e) => setU(e.target.value)} /></label>
-      <label>Password<input type="password" value={p} onChange={(e) => setP(e.target.value)} /></label>
+      <label>Username<input value={u} onChange={(e: ChangeEvent<HTMLInputElement>) => setU(e.target.value)} /></label>
+      <label>Password<input type="password" value={p} onChange={(e: ChangeEvent<HTMLInputElement>) => setP(e.target.value)} /></label>
       <button className="order-btn" type="submit">Login</button>
       <button type="button" className="btn-link" onClick={onForgot}>Forgot password?</button>
     </form>
   );
 }
 
-function ForgotForm({ account, onReset, onBack, toast }: any) {
+function ForgotForm({ account, onReset, onBack, toast }: ForgotFormProps) {
   const [a, setA] = useState(""); const [np, setNp] = useState(""); const [cp, setCp] = useState("");
   return (
-    <form className="form" onSubmit={(e) => {
+    <form className="form" onSubmit={(e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
       if (a.trim().toLowerCase() !== account.securityA) { toast("Security answer is incorrect", "error"); return; }
       if (np.length < 4) { toast("Password too short", "error"); return; }
@@ -595,9 +683,9 @@ function ForgotForm({ account, onReset, onBack, toast }: any) {
       onReset(np);
     }}>
       <p className="form-hint">Answer your security question to reset the password.</p>
-      <label>{account?.securityQ}<input value={a} onChange={(e) => setA(e.target.value)} /></label>
-      <label>New Password<input type="password" value={np} onChange={(e) => setNp(e.target.value)} /></label>
-      <label>Confirm New Password<input type="password" value={cp} onChange={(e) => setCp(e.target.value)} /></label>
+      <label>{account.securityQ}<input value={a} onChange={(e: ChangeEvent<HTMLInputElement>) => setA(e.target.value)} /></label>
+      <label>New Password<input type="password" value={np} onChange={(e: ChangeEvent<HTMLInputElement>) => setNp(e.target.value)} /></label>
+      <label>Confirm New Password<input type="password" value={cp} onChange={(e: ChangeEvent<HTMLInputElement>) => setCp(e.target.value)} /></label>
       <button className="order-btn" type="submit">Reset Password</button>
       <button type="button" className="btn-link" onClick={onBack}>Back to login</button>
     </form>
@@ -605,7 +693,7 @@ function ForgotForm({ account, onReset, onBack, toast }: any) {
 }
 
 /* ---------- Dashboard ---------- */
-function Dashboard({ farmers, setFarmers, products, setProducts, toast, notifs }: any) {
+function Dashboard({ farmers, setFarmers, products, setProducts, toast, notifs }: DashboardProps) {
   const [tab, setTab] = useState<"farmers" | "products">("farmers");
   return (
     <div className="dash">
@@ -622,12 +710,12 @@ function Dashboard({ farmers, setFarmers, products, setProducts, toast, notifs }
   );
 }
 
-function FarmerCRUD({ farmers, setFarmers, toast, notifs, products, setProducts }: any) {
+function FarmerCRUD({ farmers, setFarmers, toast, notifs, products, setProducts }: FarmerCRUDProps) {
   const empty: Farmer = { id: "", name: "", location: "", avatar: "👩‍🌾", phone: "", liveLocation: "" };
   const [form, setForm] = useState<Farmer>(empty);
   const [editing, setEditing] = useState<string | null>(null);
 
-  function submit(e: React.FormEvent) {
+  function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!form.name || !form.location) { toast("Name and location required", "error"); return; }
     if (editing) {
@@ -684,12 +772,12 @@ function FarmerCRUD({ farmers, setFarmers, toast, notifs, products, setProducts 
   );
 }
 
-function ProductCRUD({ farmers, products, setProducts, toast }: any) {
+function ProductCRUD({ farmers, products, setProducts, toast }: ProductCRUDProps) {
   const empty: Product = { id: "", name: "", category: "Vegetables", farmerId: farmers[0]?.id || "", price: 0, unit: "lb", quantity: 0, freshness: "Harvested Today", emoji: "🍅" };
   const [form, setForm] = useState<Product>(empty);
   const [editing, setEditing] = useState<string | null>(null);
 
-  function submit(e: React.FormEvent) {
+  function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!form.name || !form.farmerId) { toast("Name and farmer required", "error"); return; }
     if (editing) {
